@@ -63,7 +63,7 @@ void on_decryption_command_keys_typed() {
 void on_ring_positions_command_keys_typed() {
   auto pushed_mode = yield_blink_mode(SETTINGS);
 
-  keyboard.await_accept_command_typed();
+  keyboard.await_accept_command_keys_typed();
 
   auto offsets = driver.positions();
 
@@ -78,7 +78,7 @@ void on_ring_positions_command_keys_typed() {
 void on_rotor_types_command_keys_typed() {
   auto pushed_mode = yield_blink_mode(SETTINGS);
 
-  keyboard.await_accept_command_typed();
+  keyboard.await_accept_command_keys_typed();
 
   auto types = driver.positions();
 

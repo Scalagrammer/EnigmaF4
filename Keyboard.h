@@ -71,7 +71,7 @@ public:
     }
   }    
 
-  void await_accept_command_typed() {
+  void await_accept_command_keys_typed() {
   await:
     while (!keys.update()) delay(KEY_EVENT_TIMEOUT);
     if (keys[O] && keys[K]) return; // TODO exclusive mode
@@ -81,7 +81,7 @@ public:
 private:
 
   const GyverShift<INPUT, 4> keys;
-  
+
   void recognize_and_handle() {
     if (keys[M] && keys[E]) {
       on_encryption_command_keys_typed();
