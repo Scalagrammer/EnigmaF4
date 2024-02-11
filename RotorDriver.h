@@ -25,7 +25,7 @@ public:
     for (auto i = 0; i < 4; i++) {
       auto position = turn(i);
       rotated[i] = true;
-      if (notches[i].has_position(position)) break;
+      if (!notches[i].has_position(position)) break;
     }
 
     return rotated;
