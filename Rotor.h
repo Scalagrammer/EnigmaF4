@@ -111,10 +111,6 @@ public:
     };
   }
 
-  void move() {
-    rotate_table_left();
-  }
-
   // TODO : include ring offset
   Position swap(Position position) {
     return table[position];

@@ -1,38 +1,28 @@
+#include <cstdint>
 #ifndef ROTOR_DRIVER_H
 #define ROTOR_DRIVER_H
 
-#include "HardwareSerial.h"
 #include <Arduino.h>
+#include <GyverShift.h>
 
 #include "Notch.h"
 
 class RotorDriver {
 public:
-  RotorDriver(uint8_t clk, uint8_t cs, uint8_t data) {
-  // RotorDriver(uint8_t clk, uint8_t cs, uint8_t data) {
-    // this->clk  = clk;
-    // this->cs   = cs;
-    // this->data = data;
-    // pinMode(clk,  OUTPUT);
-    // pinMode(cs,   OUTPUT);
-    // pinMode(data, OUTPUT);
-  }
-  
-  bool * rotate_all(Notch * notches) {
+  RotorDriver(uint8_t clk, uint8_t cs, uint8_t data) : encoders(cs, data, clk) {}
 
-    bool rotated[4] = {false, false, false, false};
-
+  uint8_t * rotate_all(Notch * notches) {
     for (auto i = 0; i < 4; i++) {
-      auto position = turn(i);
-      rotated[i] = true;
-      if (!notches[i].has_position(position)) break;
+      auto notch = notches[i];
+      if (notch.is_static_rotor()) break;
+      else if (!notch.has_position(turn(i))) break;
     }
-
-    return rotated;
+    return positions();
   }
 
-  void turn_all() {
+  uint8_t turn_all() {
     for (auto i = 0; i < 4; i++) turn(i);
+    return positions();
   }
 
   uint8_t * positions() {
@@ -40,23 +30,26 @@ public:
   }
 
 private:
+  const GyverShift<INPUT, 3> encoders; // 24
+
   uint8_t clk, cs, data = 0;
 
   uint8_t turn(uint8_t rotor) {
     switch (rotor) {
       case 0:
         turn_zero();
-        return 0; // TODO : read encoders range and recognize
+        break;
       case 1:
         turn_first();
-        return 0; // TODO : read encoders range and recognize
+        break;
       case 2:
         turn_second();
-        return 0; // TODO : read encoders range and recognize
+        break;
       case 3:
         turn_third();
-        return 0; // TODO : read encoders range and recognize
+        break;
     };
+    return positions()[rotor];
   }
 
 /*

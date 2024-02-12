@@ -99,17 +99,10 @@ void shift_alphabet_space() {
     notches[i] = rotor_set[i]->get_notch();
   }
 
-  auto positions = driver.positions();
-  auto rotated   = driver.rotate_all(notches);
+  auto positions = driver.rotate_all(notches);
 
   for (auto i : drct_rotors_order) {
-    auto rotor = rotor_set[i];
-
-    rotor->set_position(positions[i]); // synhronize
-
-    if (rotated[i]) {
-      rotor->move();
-    }
+    rotor_set[i]->set_position(positions[i]); // synhronize
   }
 }
 
