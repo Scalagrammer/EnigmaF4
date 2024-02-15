@@ -38,7 +38,8 @@ static const Position drct_positions_order[26] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 
 static const Position rvrs_rotors_order[4] = {3, 2, 1, 0};
 static const Position drct_rotors_order[4] = {0, 1, 2, 3};
 
-Position reflect(Position position, bool encryption_mode) {
+Position reflect(Position position, bool encryption_mode) 
+{
   switch (position) {
     case 23:
       position = encryption_mode ? 24 : 25;
@@ -56,16 +57,19 @@ Position reflect(Position position, bool encryption_mode) {
   return position;
 }
 
-class Rotor {
+class Rotor 
+{
 public:
-  ~Rotor() {
+  ~Rotor() 
+  {
     delete[] table;
     delete notch;
     delete & offset;
     delete & turnover;
   }
 
-  Rotor(RotorType type) {
+  Rotor(RotorType type) 
+  {
     table = new Position[26];
     switch (type) {
       case I:
@@ -112,12 +116,14 @@ public:
   }
 
   // TODO : include ring offset
-  Position swap(Position position) {
+  Position swap(Position position) 
+  {
     return table[position];
   }
 
   // TODO : include ring offset
-  Position revert(Position position) {
+  Position revert(Position position) 
+  {
     for (auto i : drct_positions_order) {
       if (table[i] == position) {
         position = i;
@@ -128,7 +134,8 @@ public:
   }
 
   // TODO : include ring offset
-  void set_position(Position value) {
+  void set_position(Position value) 
+  {
     if (rotable()) {
       while (table[0] != value) { 
         rotate_table_left(); 
@@ -136,11 +143,13 @@ public:
     }
   }
 
-  void set_offset(Position value) {
+  void set_offset(Position value) 
+  {
     offset = value;
   }
 
-  Notch get_notch() {
+  Notch get_notch() 
+  {
     return *notch;
   }
 
@@ -151,11 +160,13 @@ private:
   Position offset   = 0; // ring position
   Position turnover = 0;
 
-  bool rotable() {
-    return !notch->has_position(-1);
+  bool rotable() 
+  {
+    return !(notch->at(-1));
   }
 
-  void rotate_table_left() {
+  void rotate_table_left() 
+  {
     auto first = table[0];
 
     for (auto i = 1; i < 26; i++) {

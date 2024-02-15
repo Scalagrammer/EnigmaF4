@@ -11,20 +11,20 @@ static const BlinkMode ENCRYPTION = 1;
 static const BlinkMode DECRYPTION = 2; 
 static const BlinkMode ACCEPTED   = 3;
 
-class ControlPane {
+class ControlPane 
+{
 public:
-  ControlPane(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin) : _red_pin(red_pin), _green_pin(green_pin), _blue_pin(blue_pin) {
-    pinMode(red_pin,   OUTPUT);
-    pinMode(green_pin, OUTPUT);
-    pinMode(blue_pin,  OUTPUT);
-  };
+  ControlPane(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin) : _red_pin(red_pin), _green_pin(green_pin), _blue_pin(blue_pin) 
+  {}
 
-  void reset_led() {
+  void reset_led() 
+  {
     led_off();
     blinks = -1;
   }
 
-  void blink(BlinkMode mode) {
+  void blink(BlinkMode mode) 
+  {
     switch (mode) {
       case SETTINGS: 
         blink_settings_mode();
@@ -41,12 +41,12 @@ public:
     };
   }
 private:
-
   const uint8_t _red_pin, _green_pin, _blue_pin;
 
   volatile Counter blinks = -1;
 
-  void blink_settings_mode() {
+  void blink_settings_mode() 
+  {
     switch ((++blinks) %= 10) {
       case 0:
         show_blue();
@@ -57,7 +57,8 @@ private:
     };
   }
 
-  void blink_encryption_mode() {
+  void blink_encryption_mode() 
+  {
     switch ((++blinks) %= 50) {
       case 0:
       case 7:
@@ -70,7 +71,8 @@ private:
     };
   }
 
-  void blink_decryption_mode() {
+  void blink_decryption_mode() 
+  {
     switch ((++blinks) %= 50) {
       case 0:
       case 7:
@@ -83,7 +85,8 @@ private:
     };
   }
 
-  void blink_accepted() {
+  void blink_accepted() 
+  {
     switch ((++blinks) %= 50) {
       case 0:
       case 4:
@@ -106,23 +109,28 @@ private:
     };
   }
 
-  void led_off() {
+  void led_off() 
+  {
     show_rgb(0x00, 0x00, 0x00);
   }
 
-  void show_red() {
+  void show_red() 
+  {
     show_rgb(0xFF, 0x00, 0x00);
   }
 
-  void show_green() {
+  void show_green() 
+  {
     show_rgb(0x00, 0xFF, 0x00);
   }
 
-  void show_blue() {
+  void show_blue() 
+  {
     show_rgb(0x00, 0x00, 0xFF);
   }
 
-  void show_rgb(uint8_t r, uint8_t g, uint8_t b) {
+  void show_rgb(uint8_t r, uint8_t g, uint8_t b) 
+  {
     analogWrite(_red_pin,   r);
     analogWrite(_green_pin, g);
     analogWrite(_blue_pin,  b);

@@ -32,13 +32,14 @@ static const char MORSE_CODES[26][5] = {
   {'-', '-', '.', '.', ' '}    // Z
 };
 
-class MorseSpeaker {
+class MorseSpeaker 
+{
 public:
-  MorseSpeaker(uint8_t pin) : speaker_pin(pin) {
-    pinMode(pin, OUTPUT);  
-  }
+  MorseSpeaker(uint8_t pin) : speaker_pin(pin) 
+  {}
 
-  void play(uint8_t position) {
+  void play(uint8_t position) 
+  {
     for (auto code : MORSE_CODES[position]) {
       if (code == '.') {
         play_dot();
@@ -54,14 +55,16 @@ private:
   static const uint8_t pause_duration = 200;
   static const uint8_t tone_frequency = 400;
 
-  uint8_t speaker_pin;
+  const uint8_t speaker_pin;
 
-  void play_dot() {
+  void play_dot() 
+  {
     tone(speaker_pin, tone_frequency, dot_duration);
     delay(pause_duration);
   }
 
-  void play_dash() {
+  void play_dash() 
+  {
     tone(speaker_pin, tone_frequency, dash_duration);
     delay(pause_duration);
   }

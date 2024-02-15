@@ -1,6 +1,7 @@
 #include "RotorDriver.h"
 #include "Keyboard.h"
 #include "Ledboard.h"
+#include "Plugboard.h"
 #include "ControlPane.h"
 #include "Rotor.h"
 #include "MorseSpeaker.h"
@@ -14,58 +15,68 @@
 #define CONTROL_PANE_BLINK_TIMEOUT 70000 // us
 #define ACCEPTED_BLINK_MODE_DURATION 450 // ms
 
-const RotorDriver driver(CLK, DRR_CS, DI);
-const Ledboard  ledboard(CLK, LDB_CS, DO);
-const Keyboard  keyboard(CLK, KYB_CS, DO);
+const RotorDriver driver(CLK, DRR_CS, DAT);
+const Ledboard  ledboard(CLK, LDB_CS, DAT);
+const Keyboard  keyboard(CLK, KBR_CS, DAT); 
 
 const ControlPane control_pane(CLD_R, CLD_G, CLD_B);
 
-const Rotor * rotor_set[RTS_C] = {new Rotor(I), new Rotor(II), new Rotor(III), new Rotor(IV)}; // default combination
+const Plugboard plugboard(CLK, PGB_TX_CS, PGB_RX_CS, DAT); 
+
+const Rotor * rotor_set[4] = {new Rotor(I), new Rotor(II), new Rotor(III), new Rotor(IV)}; // default combination
 
 auto encryption_mode = true;
 
 volatile auto blink_mode = ENCRYPTION;
 
-void setup() {
+void setup() 
+{
   cli();
   Timer1.initialize(CONTROL_PANE_BLINK_TIMEOUT);
   Timer1.attachInterrupt(on_blink_timeout);
   sei();
 }
 
-void loop() {
+void loop() 
+{
   keyboard.listen();
 }
 
-void on_blink_timeout() {
+void on_blink_timeout() 
+{
   control_pane.blink(blink_mode);
 }
 
-void on_key_pressed(Key input) {
+void on_key_pressed(Key input) 
+{
   shift_alphabet_space();
   ledboard.show(translate(input));
 }
 
-void on_key_released() {
+void on_key_released(Key input) 
+{
   ledboard.hide_all();
 }
 
-void on_encryption_command_keys_typed() {
+void on_encryption_command_keys_typed() 
+{
   encryption_mode = true;
   yield_blink_mode(ENCRYPTION);
 }
 
-void on_decryption_command_keys_typed() {
+void on_decryption_command_keys_typed() 
+{
   encryption_mode = false;
   yield_blink_mode(DECRYPTION);
 }
 
-void on_ring_positions_command_keys_typed() {
+void on_ring_positions_command_keys_typed() 
+{
   auto pushed_mode = yield_blink_mode(SETTINGS);
 
   keyboard.await_accept_command_keys_typed();
 
-  auto offsets = driver.positions();
+  auto offsets = driver.snapshot();
 
   for (auto i : drct_rotors_order) {
     rotor_set[i]->set_offset(offsets[i]);
@@ -75,12 +86,13 @@ void on_ring_positions_command_keys_typed() {
   yield_blink_mode(pushed_mode);
 }
 
-void on_rotor_types_command_keys_typed() {
+void on_rotor_types_command_keys_typed() 
+{
   auto pushed_mode = yield_blink_mode(SETTINGS);
 
   keyboard.await_accept_command_keys_typed();
 
-  auto types = driver.positions();
+  auto types = driver.snapshot();
 
   for (auto i : drct_rotors_order) {
     delete rotor_set[i];
@@ -92,7 +104,8 @@ void on_rotor_types_command_keys_typed() {
   yield_blink_mode(pushed_mode);
 }
 
-void shift_alphabet_space() {
+void shift_alphabet_space() 
+{
   Notch * notches;
 
   for (auto i : drct_rotors_order) {
@@ -106,7 +119,10 @@ void shift_alphabet_space() {
   }
 }
 
-Position translate(Position position) {
+Position translate(Position position) 
+{
+  position = plugboard.connect(position);
+
   for (auto i : drct_rotors_order)
     position = rotor_set[i]->swap(position);
 
@@ -115,10 +131,13 @@ Position translate(Position position) {
   for (auto i : rvrs_rotors_order)
     position = rotor_set[i]->revert(position);
 
+  position = plugboard.connect(position);
+
   return position;
 }
 
-BlinkMode yield_blink_mode(BlinkMode mode) {
+BlinkMode yield_blink_mode(BlinkMode mode) 
+{
   auto pushed_blink_mode = blink_mode;
 
   cli();

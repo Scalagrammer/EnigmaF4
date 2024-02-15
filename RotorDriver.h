@@ -1,40 +1,59 @@
-#include <cstdint>
 #ifndef ROTOR_DRIVER_H
 #define ROTOR_DRIVER_H
 
 #include <Arduino.h>
-#include <GyverShift.h>
 
 #include "Notch.h"
+#include "gpio.h"
 
-class RotorDriver {
+class RotorDriver 
+{
 public:
-  RotorDriver(uint8_t clk, uint8_t cs, uint8_t data) : encoders(cs, data, clk) {}
+  RotorDriver(uint8_t clk, uint8_t cs, uint8_t data) : _clk(clk), _cs(cs), _data(data)
+  {}
 
-  uint8_t * rotate_all(Notch * notches) {
+  uint8_t * rotate_all(Notch * notches) 
+  {
+    pinMode(_data, OUTPUT);
+
     for (auto i = 0; i < 4; i++) {
       auto notch = notches[i];
+
       if (notch.is_static_rotor()) break;
-      else if (!notch.has_position(turn(i))) break;
+
+      else if (!notch.at(turn(i))) break;
     }
-    return positions();
+
+    return snapshot();
   }
 
-  uint8_t turn_all() {
-    for (auto i = 0; i < 4; i++) turn(i);
-    return positions();
-  }
+  uint8_t * snapshot() 
+  {
+    gpio::shiftin(3, state, _clk, _cs, _data);
 
-  uint8_t * positions() {
-    return new uint8_t[4]{0,1,2,3}; // TODO : read whole encoders range and recognize
+    uint8_t * positions;
+
+    uint8_t rotor_index = 0;
+
+    for (auto offset = 0; offset <= 15; offset += 5) {
+      positions[rotor_index] = decode_position(offset);
+      rotor_index += 1;
+    }
+
+    return positions;
   }
 
 private:
-  const GyverShift<INPUT, 3> encoders; // 24
+  const uint8_t _clk, _cs, _data;
 
-  uint8_t clk, cs, data = 0;
+  bool state[24];
 
-  uint8_t turn(uint8_t rotor) {
+  uint8_t decode_position(uint8_t offset) {
+    return (4 * state[offset]) + (2 * state[offset + 1]) + state[offset + 2] + (3 * state[offset + 3]) + (6 * state[offset + 4]);
+  }
+
+  uint8_t turn(uint8_t rotor) 
+  {
     switch (rotor) {
       case 0:
         turn_zero();
@@ -49,7 +68,7 @@ private:
         turn_third();
         break;
     };
-    return positions()[rotor];
+    return *(rotor + snapshot());
   }
 
 /*
@@ -96,95 +115,105 @@ private:
 // 0b00000000|00000101
 // 0b00000000|00001001
 
-  void turn_zero() {
-    select_chip(LOW);
-    shiftOut(data, clk, MSBFIRST, 0b00000000);
-    shiftOut(data, clk, MSBFIRST, 0b10100000);
-    select_chip(HIGH);
-    select_chip(LOW);
-    shiftOut(data, clk, MSBFIRST, 0b00000000);
-    shiftOut(data, clk, MSBFIRST, 0b01100000);
-    select_chip(HIGH);
-    select_chip(LOW);
-    shiftOut(data, clk, MSBFIRST, 0b00000000);
-    shiftOut(data, clk, MSBFIRST, 0b01010000);
-    select_chip(HIGH);
-    select_chip(LOW);
-    shiftOut(data, clk, MSBFIRST, 0b00000000);
-    shiftOut(data, clk, MSBFIRST, 0b10010000);
-    select_chip(HIGH);
+  void turn_zero() 
+  {
+    cs_low();
+    shiftOut(_data, _clk, MSBFIRST, 0b00000000);
+    shiftOut(_data, _clk, MSBFIRST, 0b10100000);
+    cs_high();
+    cs_low();
+    shiftOut(_data, _clk, MSBFIRST, 0b00000000);
+    shiftOut(_data, _clk, MSBFIRST, 0b01100000);
+    cs_high();
+    cs_low();
+    shiftOut(_data, _clk, MSBFIRST, 0b00000000);
+    shiftOut(_data, _clk, MSBFIRST, 0b01010000);
+    cs_high();
+    cs_low();
+    shiftOut(_data, _clk, MSBFIRST, 0b00000000);
+    shiftOut(_data, _clk, MSBFIRST, 0b10010000);
+    cs_high();
     reset();
   }
 
   void turn_first() {
-    select_chip(LOW);
-    shiftOut(data, clk, MSBFIRST, 0b00000000);
-    shiftOut(data, clk, MSBFIRST, 0b00001010);
-    select_chip(HIGH);
-    select_chip(LOW);
-    shiftOut(data, clk, MSBFIRST, 0b00000000);
-    shiftOut(data, clk, MSBFIRST, 0b00000110);
-    select_chip(HIGH);
-    select_chip(LOW);
-    shiftOut(data, clk, MSBFIRST, 0b00000000);
-    shiftOut(data, clk, MSBFIRST, 0b00000101);
-    select_chip(HIGH);
-    select_chip(LOW);
-    shiftOut(data, clk, MSBFIRST, 0b00000000);
-    shiftOut(data, clk, MSBFIRST, 0b00001001);
-    select_chip(HIGH);
+    cs_low();
+    shiftOut(_data, _clk, MSBFIRST, 0b00000000);
+    shiftOut(_data, _clk, MSBFIRST, 0b00001010);
+    cs_high();
+    cs_low();
+    shiftOut(_data, _clk, MSBFIRST, 0b00000000);
+    shiftOut(_data, _clk, MSBFIRST, 0b00000110);
+    cs_high();
+    cs_low();
+    shiftOut(_data, _clk, MSBFIRST, 0b00000000);
+    shiftOut(_data, _clk, MSBFIRST, 0b00000101);
+    cs_high();
+    cs_low();
+    shiftOut(_data, _clk, MSBFIRST, 0b00001001);
+    shiftOut(_data, _clk, MSBFIRST, 0b00000000);
+    cs_high();
     reset();
   }
 
-  void turn_second() {
-    select_chip(LOW);
-    shiftOut(data, clk, MSBFIRST, 0b10100000);
-    shiftOut(data, clk, MSBFIRST, 0b00000000);
-    select_chip(HIGH);
-    select_chip(LOW);
-    shiftOut(data, clk, MSBFIRST, 0b01100000);
-    shiftOut(data, clk, MSBFIRST, 0b00000000);
-    select_chip(HIGH);
-    select_chip(LOW);
-    shiftOut(data, clk, MSBFIRST, 0b01010000);
-    shiftOut(data, clk, MSBFIRST, 0b00000000);
-    select_chip(HIGH);
-    select_chip(LOW);
-    shiftOut(data, clk, MSBFIRST, 0b10010000);
-    shiftOut(data, clk, MSBFIRST, 0b00000000);
-    select_chip(HIGH);
+  void turn_second() 
+  {
+    cs_low();
+    shiftOut(_data, _clk, MSBFIRST, 0b00000000);
+    shiftOut(_data, _clk, MSBFIRST, 0b10100000);
+    cs_high();
+    cs_low();
+    shiftOut(_data, _clk, MSBFIRST, 0b01100000);
+    shiftOut(_data, _clk, MSBFIRST, 0b00000000);
+    cs_high();
+    cs_low();
+    shiftOut(_data, _clk, MSBFIRST, 0b01010000);
+    shiftOut(_data, _clk, MSBFIRST, 0b00000000);
+    cs_high();
+    cs_low();
+    shiftOut(_data, _clk, MSBFIRST, 0b10010000);
+    shiftOut(_data, _clk, MSBFIRST, 0b00000000);
+    cs_high();
     reset();
   }
 
-  void turn_third() {
-    select_chip(LOW);
-    shiftOut(data, clk, MSBFIRST, 0b00001010);
-    shiftOut(data, clk, MSBFIRST, 0b00000000);
-    select_chip(HIGH);
-    select_chip(LOW);
-    shiftOut(data, clk, MSBFIRST, 0b00000110);
-    shiftOut(data, clk, MSBFIRST, 0b00000000);
-    select_chip(HIGH);
-    select_chip(LOW);
-    shiftOut(data, clk, MSBFIRST, 0b00000101);
-    shiftOut(data, clk, MSBFIRST, 0b00000000);
-    select_chip(HIGH);
-    select_chip(LOW);
-    shiftOut(data, clk, MSBFIRST, 0b00001001);
-    shiftOut(data, clk, MSBFIRST, 0b00000000);
-    select_chip(HIGH);
+  void turn_third() 
+  {
+    cs_low();
+    shiftOut(_data, _clk, MSBFIRST, 0b00001010);
+    shiftOut(_data, _clk, MSBFIRST, 0b00000000);
+    cs_high();
+    cs_low();
+    shiftOut(_data, _clk, MSBFIRST, 0b00000110);
+    shiftOut(_data, _clk, MSBFIRST, 0b00000000);
+    cs_high();
+    cs_low();
+    shiftOut(_data, _clk, MSBFIRST, 0b00000101);
+    shiftOut(_data, _clk, MSBFIRST, 0b00000000);
+    cs_high();
+    cs_low();
+    shiftOut(_data, _clk, MSBFIRST, 0b00001001);
+    shiftOut(_data, _clk, MSBFIRST, 0b00000000);
+    cs_high();
     reset();
   }
 
-  void reset() {
-    select_chip(LOW);
-    shiftOut(data, clk, MSBFIRST, 0b00000000);
-    shiftOut(data, clk, MSBFIRST, 0b00000000);
-    select_chip(HIGH);
+  void reset() 
+  {
+    cs_low();
+    shiftOut(_data, _clk, MSBFIRST, 0b00000000);
+    shiftOut(_data, _clk, MSBFIRST, 0b00000000);
+    cs_high();
   }
 
-  void select_chip(uint8_t flag) {
-    digitalWrite(cs, flag);
+  void cs_low() 
+  {
+    digitalWrite(_cs, LOW);
+  }
+
+  void cs_high() 
+  {
+    digitalWrite(_cs, HIGH);
   }
 };
 

@@ -1,5 +1,3 @@
-#include "Stream.h"
-#include "HardwareSerial.h"
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
@@ -8,7 +6,7 @@
 #endif
 
 #include <Arduino.h>
-#include <GyverShift.h>
+#include "gpio.h"
 
 typedef uint8_t Key;
 
@@ -50,7 +48,7 @@ static const Key W  =  22;
 static const Key O  =  14;
 static const Key K  =  10;
 
-extern void on_key_released();
+extern void on_key_released(Key key);
 
 extern void on_key_pressed(Key key);
 
@@ -60,29 +58,48 @@ extern void on_encryption_command_keys_typed();
 extern void on_rotor_types_command_keys_typed();
 extern void on_ring_positions_command_keys_typed();
 
-class Keyboard {
+class Keyboard 
+{
 public:
-  Keyboard(uint8_t clk, uint8_t cs, uint8_t data) : keys(cs, data, clk) {}
+  Keyboard(uint8_t clk, uint8_t cs, uint8_t data) : _clk(clk), _cs(cs), _data(data) 
+  {}
 
-  void listen() {
+  void listen() 
+  {
     while (true) {
-      if (!keys.update()) delay(KEY_EVENT_TIMEOUT);
-      recognize_and_handle();
+      if (!updated()) delay(KEY_EVENT_TIMEOUT);
+      accept();
     }
   }    
 
-  void await_accept_command_keys_typed() {
+  void await_accept_command_keys_typed() 
+  {
   await:
-    while (!keys.update()) delay(KEY_EVENT_TIMEOUT);
+    while (!updated()) delay(KEY_EVENT_TIMEOUT);
     if (keys[O] && keys[K]) return; // TODO exclusive mode
     goto await; 
   }
 
 private:
+  bool keys[26];
 
-  const GyverShift<INPUT, 4> keys;
+  const uint8_t _clk, _cs, _data;
 
-  void recognize_and_handle() {
+  void await_key_released(Key key) 
+  {
+  await:
+    while (!updated()) delay(KEY_EVENT_TIMEOUT);
+    if (keys[key]) 
+    goto await; 
+  }
+
+  bool updated() 
+  {
+    return gpio::shiftin(4, keys, _clk, _cs, _data);
+  }
+
+  void accept() 
+  {
     if (keys[M] && keys[E]) {
       on_encryption_command_keys_typed();
     } else if (keys[M] && keys[D]) {
@@ -96,17 +113,10 @@ private:
       if (keys[k]) {
         on_key_pressed(k);
         await_key_released(k);
-        on_key_released();
+        on_key_released(k);
         break;
       }
     } 
-  }
-
-  void await_key_released(Key key) {
-  await:
-    while (!keys.update()) delay(KEY_EVENT_TIMEOUT);
-    if (keys[key]) 
-    goto await; 
   }
 };
 
