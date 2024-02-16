@@ -7,12 +7,12 @@ public:
   Notch(char first = -1, char second = -1) : first_position(first), second_position(second) 
   {}
 
-  bool is_static_rotor() 
+  bool movable() 
   {
     return first_position == (-1) && second_position == (-1);
   }
 
-  bool at(char position) 
+  bool turnover(char position) 
   {
     return (position == first_position) || (position == second_position);
   }

@@ -6,6 +6,8 @@
 #include "Rotor.h"
 #include "MorseSpeaker.h"
 #include "Notch.h"
+#include "Translator.h"
+#include "Schreibmax.h"
 
 #include <TimerOne.h>
 
@@ -15,19 +17,13 @@
 #define CONTROL_PANE_BLINK_TIMEOUT 70000 // us
 #define ACCEPTED_BLINK_MODE_DURATION 450 // ms
 
-const RotorDriver driver(CLK, DRR_CS, DAT);
-const Ledboard  ledboard(CLK, LDB_CS, DAT);
-const Keyboard  keyboard(CLK, KBR_CS, DAT); 
+Schreibmax schreibmax(URT_RB);
+Ledboard ledboard(CLK, LDB_CS, DAT);
+Keyboard keyboard(CLK, KBR_CS, DAT); 
+Translator translator(I, II, III, IV);
+ControlPane control_pane(CLD_R, CLD_G, CLD_B);
 
-const ControlPane control_pane(CLD_R, CLD_G, CLD_B);
-
-const Plugboard plugboard(CLK, PGB_TX_CS, PGB_RX_CS, DAT); 
-
-const Rotor * rotor_set[4] = {new Rotor(I), new Rotor(II), new Rotor(III), new Rotor(IV)}; // default combination
-
-auto encryption_mode = true;
-
-volatile auto blink_mode = ENCRYPTION;
+volatile auto blink_mode = ENCRYPTION_MODE;
 
 void setup() 
 {
@@ -47,10 +43,9 @@ void on_blink_timeout()
   control_pane.blink(blink_mode);
 }
 
-void on_key_pressed(Key input) 
+void on_key_pressed(Key position) 
 {
-  shift_alphabet_space();
-  ledboard.show(translate(input));
+  ledboard.show(translator(position));
 }
 
 void on_key_released(Key input) 
@@ -58,82 +53,45 @@ void on_key_released(Key input)
   ledboard.hide_all();
 }
 
-void on_encryption_command_keys_typed() 
-{
-  encryption_mode = true;
-  yield_blink_mode(ENCRYPTION);
-}
-
-void on_decryption_command_keys_typed() 
-{
-  encryption_mode = false;
-  yield_blink_mode(DECRYPTION);
-}
-
-void on_ring_positions_command_keys_typed() 
-{
-  auto pushed_mode = yield_blink_mode(SETTINGS);
-
-  keyboard.await_accept_command_keys_typed();
-
-  auto offsets = driver.snapshot();
-
-  for (auto i : drct_rotors_order) {
-    rotor_set[i]->set_offset(offsets[i]);
-  }
-
-  yield_blink_mode(ACCEPTED);
+void on_printout_command_typed() 
+{ 
+  schreibmax.switch_toogle();
+  auto pushed_mode = yield_blink_mode(ACCEPTED_MODE);
   yield_blink_mode(pushed_mode);
 }
 
-void on_rotor_types_command_keys_typed() 
+void on_encryption_command_typed() 
 {
-  auto pushed_mode = yield_blink_mode(SETTINGS);
+  translator.switch_procedure(ENCRYPTION);
+  yield_blink_mode(ENCRYPTION_MODE);
+}
 
-  keyboard.await_accept_command_keys_typed();
+void on_decryption_command_typed() 
+{
+  translator.switch_procedure(DECRYPTION);
+  yield_blink_mode(DECRYPTION_MODE);
+}
 
-  auto types = driver.snapshot();
+void on_set_offsets_command_typed() 
+{
+  auto pushed_mode = yield_blink_mode(SETTINGS_MODE);
 
-  for (auto i : drct_rotors_order) {
-    delete rotor_set[i];
-    auto type = types[i];
-    rotor_set[i] = new Rotor((type > GAMMA) ? GAMMA : type);
-  }
+  keyboard.await_accept_command_typed();
+  translator.update_offsets();
 
-  yield_blink_mode(ACCEPTED);
+  yield_blink_mode(ACCEPTED_MODE);
   yield_blink_mode(pushed_mode);
 }
 
-void shift_alphabet_space() 
+void on_set_walzen_command_typed() 
 {
-  Notch * notches;
+  auto pushed_mode = yield_blink_mode(SETTINGS_MODE);
 
-  for (auto i : drct_rotors_order) {
-    notches[i] = rotor_set[i]->get_notch();
-  }
+  keyboard.await_accept_command_typed();
+  translator.update_rotor_types();
 
-  auto positions = driver.rotate_all(notches);
-
-  for (auto i : drct_rotors_order) {
-    rotor_set[i]->set_position(positions[i]); // synhronize
-  }
-}
-
-Position translate(Position position) 
-{
-  position = plugboard.connect(position);
-
-  for (auto i : drct_rotors_order)
-    position = rotor_set[i]->swap(position);
-
-  position = reflect(position, encryption_mode);
-
-  for (auto i : rvrs_rotors_order)
-    position = rotor_set[i]->revert(position);
-
-  position = plugboard.connect(position);
-
-  return position;
+  yield_blink_mode(ACCEPTED_MODE);
+  yield_blink_mode(pushed_mode);
 }
 
 BlinkMode yield_blink_mode(BlinkMode mode) 
@@ -145,7 +103,7 @@ BlinkMode yield_blink_mode(BlinkMode mode)
   blink_mode = mode;
   sei();
 
-  if (mode == ACCEPTED) {
+  if (mode == ACCEPTED_MODE) {
     delay(ACCEPTED_BLINK_MODE_DURATION);
   }
 

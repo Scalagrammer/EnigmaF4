@@ -40,23 +40,25 @@ typedef uint8_t Key;
 */
 
 static const Key IK = 255;
-static const Key M  =  12;
-static const Key E  =   4;
-static const Key D  =   3;
-static const Key R  =  17;
-static const Key W  =  22;
-static const Key O  =  14;
 static const Key K  =  10;
+static const Key O  =  14;
+static const Key D  =   3;
+static const Key E  =   4;
+static const Key W  =  22;
+static const Key P  =  15;
+static const Key C  =   2;
 
 extern void on_key_released(Key key);
 
 extern void on_key_pressed(Key key);
 
-extern void on_decryption_command_keys_typed();
-extern void on_encryption_command_keys_typed();
+extern void on_printout_command_typed();
 
-extern void on_rotor_types_command_keys_typed();
-extern void on_ring_positions_command_keys_typed();
+extern void on_decryption_command_typed();
+extern void on_encryption_command_typed();
+
+extern void on_set_walzen_command_typed();
+extern void on_set_offsets_command_typed();
 
 class Keyboard 
 {
@@ -72,7 +74,7 @@ public:
     }
   }    
 
-  void await_accept_command_keys_typed() 
+  void await_accept_command_typed() 
   {
   await:
     while (!updated()) delay(KEY_EVENT_TIMEOUT);
@@ -100,15 +102,16 @@ private:
 
   void accept() 
   {
-    if (keys[M] && keys[E]) {
-      on_encryption_command_keys_typed();
-    } else if (keys[M] && keys[D]) {
-      on_decryption_command_keys_typed();
-    } else if (keys[M] && keys[R]) {
-      on_ring_positions_command_keys_typed();  
-    } else if (keys[M] && keys[W]) {
-      on_rotor_types_command_keys_typed();  
-    // } else if () { TODO : check for valid range & exclusive mode
+    if (keys[C] && keys[P]) {
+      on_printout_command_typed();
+    } else if (keys[C] && keys[E]) {
+      on_encryption_command_typed();
+    } else if (keys[C] && keys[D]) {
+      on_decryption_command_typed();
+    } else if (keys[C] && keys[O]) {
+      on_set_offsets_command_typed();  
+    } else if (keys[C] && keys[W]) {
+      on_set_walzen_command_typed();  
     } else for (auto k = 0; k < 26; k++) {
       if (keys[k]) {
         on_key_pressed(k);

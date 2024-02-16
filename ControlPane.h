@@ -6,10 +6,10 @@
 typedef uint8_t Counter;
 typedef uint8_t BlinkMode;
 
-static const BlinkMode SETTINGS   = 0;
-static const BlinkMode ENCRYPTION = 1;
-static const BlinkMode DECRYPTION = 2; 
-static const BlinkMode ACCEPTED   = 3;
+static const BlinkMode SETTINGS_MODE   = 0;
+static const BlinkMode ENCRYPTION_MODE = 1;
+static const BlinkMode DECRYPTION_MODE = 2; 
+static const BlinkMode ACCEPTED_MODE   = 3;
 
 class ControlPane 
 {
@@ -26,16 +26,16 @@ public:
   void blink(BlinkMode mode) 
   {
     switch (mode) {
-      case SETTINGS: 
+      case SETTINGS_MODE: 
         blink_settings_mode();
         break;
-      case ENCRYPTION: 
+      case ENCRYPTION_MODE: 
         blink_encryption_mode();
         break;
-      case DECRYPTION: 
+      case DECRYPTION_MODE: 
         blink_decryption_mode();
         break;
-      case ACCEPTED: 
+      case ACCEPTED_MODE: 
         blink_accepted();
         break;
     };

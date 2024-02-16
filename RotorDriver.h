@@ -19,9 +19,11 @@ public:
     for (auto i = 0; i < 4; i++) {
       auto notch = notches[i];
 
-      if (notch.is_static_rotor()) break;
+      if (!notch.movable()) break;
 
-      else if (!notch.at(turn(i))) break;
+      auto position = turn(i);
+
+      if (!notch.turnover(position)) break;
     }
 
     return snapshot();

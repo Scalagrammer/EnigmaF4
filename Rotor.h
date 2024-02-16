@@ -38,17 +38,17 @@ static const Position drct_positions_order[26] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 
 static const Position rvrs_rotors_order[4] = {3, 2, 1, 0};
 static const Position drct_rotors_order[4] = {0, 1, 2, 3};
 
-Position reflect(Position position, bool encryption_mode) 
+Position reflect(Position position, bool encryption_procedure) 
 {
   switch (position) {
     case 23:
-      position = encryption_mode ? 24 : 25;
+      position = encryption_procedure ? 24 : 25;
       break;
     case 24:
-      position = encryption_mode ? 25 : 23;
+      position = encryption_procedure ? 25 : 23;
       break;
     case 25:
-      position = encryption_mode ? 23 : 24;
+      position = encryption_procedure ? 23 : 24;
       break;  
     default:
       if (position != 22) position = TABLE_UKW_M[position];
@@ -157,12 +157,12 @@ private:
   Position * table;
   Notch * notch;
 
-  Position offset   = 0; // ring position
+  Position offset   = 0;
   Position turnover = 0;
 
   bool rotable() 
   {
-    return !(notch->at(-1));
+    return !(notch->movable());
   }
 
   void rotate_table_left() 

@@ -1,4 +1,11 @@
+#pragma once
+
+#ifndef HARDWARE_SETTINGS_H
+#define HARDWARE_SETTINGS_H
+
 typedef uint8_t pin;
+
+typedef uint8_t UartRateBound;
 
 static const pin CLK = 0;
 static const pin DAT = 0; // serial data
@@ -13,3 +20,7 @@ static const pin PGB_TX_CS = 0;
 static const pin CLD_R = 0; 
 static const pin CLD_G = 0; 
 static const pin CLD_B = 0;
+// printer UART
+static const uint8_t URT_RB = 9600;
+
+#endif
