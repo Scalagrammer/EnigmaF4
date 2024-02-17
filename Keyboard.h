@@ -7,6 +7,7 @@
 
 #include <Arduino.h>
 #include "gpio.h"
+#include "ControlPane.h"
 
 typedef uint8_t Key;
 
@@ -70,7 +71,7 @@ public:
   {
     while (true) {
       if (!updated()) delay(KEY_EVENT_TIMEOUT);
-      accept();
+      accept_input();
     }
   }    
 
@@ -100,18 +101,18 @@ private:
     return gpio::shiftin(4, keys, _clk, _cs, _data);
   }
 
-  void accept() 
+  void accept_input() 
   {
     if (keys[C] && keys[P]) {
-      on_printout_command_typed();
+      with_accept_settings_blinking(on_printout_command_typed);
     } else if (keys[C] && keys[E]) {
-      on_encryption_command_typed();
+      with_accept_settings_blinking(on_encryption_command_typed);
     } else if (keys[C] && keys[D]) {
-      on_decryption_command_typed();
+      with_accept_settings_blinking(on_decryption_command_typed);
     } else if (keys[C] && keys[O]) {
-      on_set_offsets_command_typed();  
+      with_accept_settings_blinking(on_set_offsets_command_typed);  
     } else if (keys[C] && keys[W]) {
-      on_set_walzen_command_typed();  
+      with_accept_settings_blinking(on_set_walzen_command_typed);  
     } else for (auto k = 0; k < 26; k++) {
       if (keys[k]) {
         on_key_pressed(k);

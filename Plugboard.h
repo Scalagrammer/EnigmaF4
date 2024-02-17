@@ -21,7 +21,7 @@ public:
 
     gpio::shiftin(4, rx_bus, _clk, _cs_rx, _data);
 
-    gpio::shiftout(4, tx_bus, _clk, _cs_tx, _data);
+    gpio::shiftout(4, tx_bus, _clk, _cs_tx, _data); // clear
 
     for (auto i = 0; i < 26; i++) {
       if (rx_bus[i] == HIGH) { 

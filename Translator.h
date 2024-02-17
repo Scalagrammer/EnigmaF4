@@ -7,8 +7,8 @@
 
 typedef uint8_t TranslationProcedure;
 
-static const TranslationProcedure ENCRYPTION = 0;
-static const TranslationProcedure DECRYPTION = 1;
+static const TranslationProcedure ENCRYPTION_PROCEDURE = 0;
+static const TranslationProcedure DECRYPTION_PROCEDURE = 1;
 
 class Translator
 {
@@ -75,7 +75,7 @@ public:
 
   void switch_procedure(TranslationProcedure procedure) 
   {
-    translate_encryption = (procedure == ENCRYPTION);
+    translate_encryption = (procedure == ENCRYPTION_PROCEDURE);
   }
 
 private:
@@ -83,8 +83,8 @@ private:
 
   const RotorDriver driver;
 
-  const Rotor * rotor_set[4]; // default combination
-
+  const Rotor * rotor_set[4];
+  
   bool translate_encryption = true;
 };
 

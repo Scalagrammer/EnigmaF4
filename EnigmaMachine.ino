@@ -23,13 +23,11 @@ Keyboard keyboard(CLK, KBR_CS, DAT);
 Translator translator(I, II, III, IV);
 ControlPane control_pane(CLD_R, CLD_G, CLD_B);
 
-volatile auto blink_mode = ENCRYPTION_MODE;
-
 void setup() 
 {
   cli();
   Timer1.initialize(CONTROL_PANE_BLINK_TIMEOUT);
-  Timer1.attachInterrupt(on_blink_timeout);
+  Timer1.attachInterrupt(on_interrupt_timeout);
   sei();
 }
 
@@ -38,74 +36,65 @@ void loop()
   keyboard.listen();
 }
 
-void on_blink_timeout() 
+void on_interrupt_timeout() 
 {
-  control_pane.blink(blink_mode);
+  control_pane.blink();
 }
 
 void on_key_pressed(Key position) 
 {
-  ledboard.show(translator(position));
+  position = translator(position);
+  ledboard.show(position); 
+  schreibmax(position);
 }
 
-void on_key_released(Key input) 
+void on_key_released(Key position) 
 {
   ledboard.hide_all();
+  // schreibmax(position); // test
 }
 
 void on_printout_command_typed() 
 { 
   schreibmax.switch_toogle();
-  auto pushed_mode = yield_blink_mode(ACCEPTED_MODE);
-  yield_blink_mode(pushed_mode);
 }
 
 void on_encryption_command_typed() 
 {
-  translator.switch_procedure(ENCRYPTION);
+  translator.switch_procedure(ENCRYPTION_PROCEDURE);
   yield_blink_mode(ENCRYPTION_MODE);
 }
 
 void on_decryption_command_typed() 
 {
-  translator.switch_procedure(DECRYPTION);
+  translator.switch_procedure(DECRYPTION_PROCEDURE);
   yield_blink_mode(DECRYPTION_MODE);
 }
 
 void on_set_offsets_command_typed() 
 {
-  auto pushed_mode = yield_blink_mode(SETTINGS_MODE);
-
   keyboard.await_accept_command_typed();
   translator.update_offsets();
-
-  yield_blink_mode(ACCEPTED_MODE);
-  yield_blink_mode(pushed_mode);
 }
 
 void on_set_walzen_command_typed() 
 {
-  auto pushed_mode = yield_blink_mode(SETTINGS_MODE);
-
   keyboard.await_accept_command_typed();
   translator.update_rotor_types();
-
-  yield_blink_mode(ACCEPTED_MODE);
-  yield_blink_mode(pushed_mode);
 }
 
 BlinkMode yield_blink_mode(BlinkMode mode) 
 {
-  auto pushed_blink_mode = blink_mode;
+  auto pushed_mode = control_pane.get_blink_mode();
 
   cli();
-  control_pane.reset_led();
-  blink_mode = mode;
+  control_pane.start_blink_mode(mode);
   sei();
 
   if (mode == ACCEPTED_MODE) {
     delay(ACCEPTED_BLINK_MODE_DURATION);
   }
 
-  return pushed_blink_mode;
+  return pushed_mode;
 }
+ 

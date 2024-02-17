@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef CONTROL_PANE_H
 #define CONTROL_PANE_H
 
@@ -11,6 +13,16 @@ static const BlinkMode ENCRYPTION_MODE = 1;
 static const BlinkMode DECRYPTION_MODE = 2; 
 static const BlinkMode ACCEPTED_MODE   = 3;
 
+extern BlinkMode yield_blink_mode(BlinkMode mode);
+
+static void with_accept_settings_blinking(void (* apply_settings) ()) 
+{
+  auto pushed_mode = yield_blink_mode(SETTINGS_MODE);
+  apply_settings();
+  yield_blink_mode(ACCEPTED_MODE);
+  yield_blink_mode(pushed_mode);
+}
+
 class ControlPane 
 {
 public:
@@ -23,9 +35,19 @@ public:
     blinks = -1;
   }
 
-  void blink(BlinkMode mode) 
+  void start_blink_mode(BlinkMode mode) 
   {
-    switch (mode) {
+    _mode = mode;
+  }
+
+  BlinkMode get_blink_mode() 
+  {
+    return _mode;
+  }
+
+  void blink() 
+  {
+    switch (_mode) {
       case SETTINGS_MODE: 
         blink_settings_mode();
         break;
@@ -44,6 +66,8 @@ private:
   const uint8_t _red_pin, _green_pin, _blue_pin;
 
   volatile Counter blinks = -1;
+
+  volatile BlinkMode _mode;
 
   void blink_settings_mode() 
   {

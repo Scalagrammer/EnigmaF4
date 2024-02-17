@@ -17,11 +17,11 @@ namespace gpio {
       
 /*
   LSBFIRST 
-[load begin]->|               |<-[shift out]
-    cs    : --|_______________|--
-    clk   : --|_-_-_-_-_-_-_-_|--
-    data  : __|_x-x_x-x_x-x_x_|__
-              |7|6|5|4|3|2|1|0|
+[load begin]->|                |<-[shift out]
+     cs   ->--|________________|--
+     clk  ->--|_-_-_-_-_-_-_-_-|--
+     data ->__|_x-x_x-x_x-x_x_x|__
+               7 6 5 4 3 2 1 0
 */        
 
       for (auto j = 0; j < 8; i++) {
