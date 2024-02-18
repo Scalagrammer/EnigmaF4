@@ -41,23 +41,10 @@ public:
     }
   }
 
-  void shift_alphabet_space() 
-  {
-    Notch * notches;
-
-    for (auto i : drct_rotors_order) {
-      notches[i] = rotor_set[i]->get_notch();
-    }
-
-    auto positions = driver.rotate_all(notches);
-
-    for (auto i : drct_rotors_order) {
-      rotor_set[i]->set_position(positions[i]); // synhronize
-    }
-  }
-
   uint8_t operator () (uint8_t position)
   {
+    shift_alphabet_space();
+
     position = plugboard.connect(position);
 
     for (auto i : drct_rotors_order)
@@ -86,6 +73,21 @@ private:
   const Rotor * rotor_set[4];
   
   bool translate_encryption = true;
+
+  void shift_alphabet_space() 
+  {
+    Notch * notches;
+
+    for (auto i : drct_rotors_order) {
+      notches[i] = rotor_set[i]->get_notch();
+    }
+
+    auto positions = driver.rotate_all(notches);
+
+    for (auto i : drct_rotors_order) {
+      rotor_set[i]->set_position(positions[i]); // synhronize
+    }
+  }
 };
 
 #endif

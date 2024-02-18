@@ -17,7 +17,7 @@
 #define CONTROL_PANE_BLINK_TIMEOUT 70000 // us
 #define ACCEPTED_BLINK_MODE_DURATION 450 // ms
 
-Schreibmax schreibmax(URT_RB);
+Schreiber schreibmax(URT_RB);
 Ledboard ledboard(CLK, LDB_CS, DAT);
 Keyboard keyboard(CLK, KBR_CS, DAT); 
 Translator translator(I, II, III, IV);
@@ -51,7 +51,7 @@ void on_key_pressed(Key position)
 void on_key_released(Key position) 
 {
   ledboard.hide_all();
-  // schreibmax(position); // test
+  // schreibmax(position);
 }
 
 void on_printout_command_typed() 
